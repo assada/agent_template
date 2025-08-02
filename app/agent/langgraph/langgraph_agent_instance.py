@@ -73,9 +73,9 @@ class LangGraphAgentInstance(AgentInstance):
                     inputs, stream_mode=["updates", "messages", "custom"], config=config
                 )
                 async for event in self.stream_processor.process_stream(
-                    stream,
+                    stream, # type: ignore[arg-type]
                     run_id,
-                    span,  # type: ignore[arg-type]
+                    span,
                 ):
                     thread.status = ThreadStatus.idle
                     yield event.model_dump()

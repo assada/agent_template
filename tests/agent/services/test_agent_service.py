@@ -32,6 +32,8 @@ def agent_service(mock_langfuse):
 def mock_thread():
     return Thread(
         id="test_thread_id",
+        user_id="test_user_id",
+        agent_id="test_agent_id",
         metadata={"key": "value"},
         status=ThreadStatus.idle,
         created_at=datetime.now(UTC),

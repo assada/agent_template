@@ -6,8 +6,8 @@ from fastapi import Depends, HTTPException
 from langfuse import Langfuse  # type: ignore[attr-defined]
 from sse_starlette.sse import EventSourceResponse
 
-from app.agent.interfaces import AgentInstance
 from app.agent.factory import AgentFactory
+from app.agent.interfaces import AgentInstance
 from app.agent.services import AgentService
 from app.bootstrap.agent_registry import validate_agent_id
 from app.bootstrap.config import AppConfig
