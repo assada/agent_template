@@ -11,15 +11,15 @@ from uuid import UUID
 from langchain_core.messages import AIMessage, AIMessageChunk
 from langfuse._client.span import LangfuseSpan
 
-from app.agent.models import AIMessage as CustomAIMessage
-from app.agent.models import HumanMessage, Token
-from app.agent.services.events import EndEvent, ErrorEvent, TokenEvent
-from app.agent.services.events.base_event import BaseEvent
 from app.agent.langgraph.utils import (
     concat_text,
     strip_tool_calls,
     to_chat_message,
 )
+from app.agent.models import AIMessage as CustomAIMessage
+from app.agent.models import HumanMessage, Token
+from app.agent.services.events import EndEvent, ErrorEvent, TokenEvent
+from app.agent.services.events.base_event import BaseEvent
 
 logger = logging.getLogger(__name__)
 

@@ -21,7 +21,7 @@ thread_controller = ThreadController(get_config())
     responses={"404": {"model": ErrorResponse}, "422": {"model": ErrorResponse}},
 )
 async def get_thread(
-    user: User = Depends(get_current_user), # noqa: B008
+    user: User = Depends(get_current_user),  # noqa: B008
     thread: Thread = Depends(ThreadRepository.get_thread_by_id),  # noqa: B008
 ) -> dict[str, str | Any]:
     return {
@@ -44,7 +44,7 @@ async def get_thread(
 )
 async def delete_thread(
     request: Request,
-    user: User = Depends(get_current_user), # noqa: B008
+    user: User = Depends(get_current_user),  # noqa: B008
     thread: Thread = Depends(ThreadRepository.get_thread_by_id),  # noqa: B008
 ) -> ErrorResponse | None:
     # await ThreadRepository.delete_thread(thread.id)
@@ -57,7 +57,7 @@ async def delete_thread(
 )
 async def get_thread_history(
     request: Request,
-    user: User = Depends(get_current_user), # noqa: B008
+    user: User = Depends(get_current_user),  # noqa: B008
     thread: Thread = Depends(ThreadRepository.get_thread_by_id),  # noqa: B008
 ) -> EventSourceResponse:
     return await thread_controller.get_thread_history(user, thread)
@@ -67,7 +67,7 @@ async def get_thread_history(
 async def post_thread_feedback(
     request: Request,
     request_body: FeedbackRequest,
-    user: User = Depends(get_current_user), # noqa: B008
+    user: User = Depends(get_current_user),  # noqa: B008
     thread: Thread = Depends(ThreadRepository.get_thread_by_id),  # noqa: B008
 ) -> dict[str, str]:
     return await thread_controller.feedback(request_body, user, thread)

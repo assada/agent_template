@@ -11,10 +11,13 @@ from app.http.middleware.cors_middleware import CORSConfig, setup_cors_middlewar
 from app.utils.utils import is_valid_uuid4
 
 from ..http.routes import health_router, runs_router, thread_router
+from .agent_registry import register_agents
 from .config import AppConfig
 
 
 def create_app(config: AppConfig) -> FastAPI:
+    register_agents()
+
     app = FastAPI(
         title="Raw LangGraph",
         description="A test application",

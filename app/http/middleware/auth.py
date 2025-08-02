@@ -9,8 +9,9 @@ from app.repositories import UserRepository
 
 security = HTTPBearer()
 
+
 async def get_current_user(
-        creds: HTTPAuthorizationCredentials = Depends(security) # noqa: B008
+    creds: HTTPAuthorizationCredentials = Depends(security),  # noqa: B008
 ) -> User:
     try:
         token = creds.credentials

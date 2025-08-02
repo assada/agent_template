@@ -1,4 +1,3 @@
-
 from pydantic import Field
 
 from .chat_message import ChatMessage, MessageType

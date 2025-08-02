@@ -29,9 +29,11 @@ class Graph(ABC):
         self,
         checkpointer: BaseCheckpointSaver[Any],
         prompt_provider: PromptProvider,
+        **kwargs: Any,
     ):
         self._checkpointer = checkpointer
         self._prompt_provider = prompt_provider
+        self._custom_params = kwargs
 
     @property
     @abstractmethod
@@ -65,12 +67,14 @@ class Graph(ABC):
 
     def get_prompt_label(self) -> str:
         """Get the prompt label."""
-        return "production"
+        return str(self._custom_params.get("prompt_label", "production"))
 
     def get_prompt_fallback(self) -> Prompt:
         """Get the fallback prompt text."""
         return Prompt(
-            content="You are a helpful assistant.",
+            content=self._custom_params.get(
+                "default_prompt", "You are a helpful assistant."
+            ),
             config={
                 "model": self.get_default_model(),
                 "temperature": self.get_default_temperature(),
@@ -80,15 +84,15 @@ class Graph(ABC):
 
     def get_default_model(self) -> str:
         """Get the default model name."""
-        return "openai/gpt-4o-mini"
+        return str(self._custom_params.get("default_model", "openai/gpt-4o-mini"))
 
     def get_default_temperature(self) -> float:
         """Get the default temperature."""
-        return 1.0
+        return float(self._custom_params.get("temperature", 1.0))
 
     def get_max_tokens(self) -> int:
         """Get the maximum number of tokens for the model. Override if needed."""
-        return 4096
+        return int(self._custom_params.get("max_tokens", 4096))
 
     def get_tools(self) -> list[Any]:
         """Get tools for the model. Override to provide specific tools."""

@@ -1,3 +1,3 @@
-from app.agent.langgraph.demo.demo_graph import DemoGraph
+from app.agent.langgraph.demo.demo_agent import DemoAgent
 
-__all__ = ["DemoGraph"]
+__all__ = ["DemoAgent"]

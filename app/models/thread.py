@@ -27,6 +27,14 @@ class Thread(BaseModel):
         description="The last time the thread was updated.",
         examples=["2023-10-01T12:00:00Z"],
     )
+    user_id: str = Field(
+        description="The ID of the user that owns this thread.",
+        examples=["user-12345"],
+    )
+    agent_id: str = Field(
+        description="The ID of the agent that owns this thread.",
+        examples=["agent-12345"],
+    )
     metadata: dict[str, Any] = Field(
         ..., description="The thread metadata.", title="Metadata"
     )

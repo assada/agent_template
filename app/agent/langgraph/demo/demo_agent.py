@@ -15,15 +15,18 @@ from app.agent.prompt import PromptProvider
 logger = logging.getLogger(__name__)
 
 
-class DemoGraph(Graph):
+class DemoAgent(Graph):
     def __init__(
-        self, checkpointer: BaseCheckpointSaver[Any], prompt_provider: PromptProvider
+        self,
+        checkpointer: BaseCheckpointSaver[Any],
+        prompt_provider: PromptProvider,
+        **kwargs: Any,
     ):
-        super().__init__(checkpointer, prompt_provider)
+        super().__init__(checkpointer, prompt_provider, **kwargs)
 
     @property
     def graph_name(self) -> str:
-        return "demo_graph"
+        return "demo_agent"
 
     def get_tools(self) -> list[Any]:
         return TOOLS
