@@ -1,4 +1,6 @@
-from langchain_core.tools import BaseTool
+from typing import Any
+
+from langchain_core.tools import ArgsSchema, BaseTool
 from langgraph.config import get_stream_writer
 from pydantic import BaseModel, Field
 
@@ -12,9 +14,9 @@ class WeatherInput(BaseModel):
 class WeatherTool(BaseTool):
     name: str = "get_weather"
     description: str = "Get weather information for a given city"
-    args_schema: type[BaseModel] = WeatherInput
+    args_schema: ArgsSchema | None = WeatherInput
 
-    async def _arun(self, city: str, **kwargs) -> str:
+    async def _arun(self, city: str, **kwargs: Any) -> str:
         writer = get_stream_writer()
         if writer is not None:
             writer(
@@ -38,7 +40,7 @@ class WeatherTool(BaseTool):
 
         return f"The weather in {city} is {condition} and {temperature}°C!"
 
-    def _run(self, city: str, **kwargs) -> str:
+    def _run(self, city: str, **kwargs: Any) -> str:
         import random
 
         weather_conditions = ["sunny", "cloudy", "rainy", "snowy", "partly cloudy"]
