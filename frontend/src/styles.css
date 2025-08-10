@@ -302,17 +302,69 @@ p {
     margin: 0;
 }
 
+.app-content {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 0;
+    align-items: stretch;
+    height: calc(100vh - 60px);
+    margin-top: 60px;
+}
+
+.sidebar {
+    border-right: 1px solid var(--border-color);
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    overflow-y: auto;
+}
 .chat-container {
-    flex: 1;
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    margin-top: 60px;
-    max-width: 900px;
-    width: 100%;
-    margin-left: auto;
-    margin-right: auto;
+    max-width: 100%;
     transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+.new-chat-btn {
+    padding: 8px 10px;
+    border-radius: 6px;
+    background: var(--surface-color);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+    cursor: pointer;
+}
+
+.thread-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    overflow-y: auto;
+}
+
+.thread-item {
+    text-align: left;
+    padding: 8px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+}
+
+.thread-item.active {
+    background: rgba(128, 128, 128, 0.12);
+}
+
+.thread-title {
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.thread-subtitle {
+    opacity: 0.7;
+    font-size: 12px;
 }
 
 .theme-toggle {
@@ -912,7 +964,7 @@ p {
 .input-container {
     position: fixed;
     bottom: 15px;
-    left: 0;
+    left: 280px; /* Align with chat column (sidebar is 280px) */
     right: 0;
     display: flex;
     flex-direction: column;
@@ -1150,15 +1202,18 @@ p {
 }
 
 @media (max-width: 768px) {
+    .app-content {
+        grid-template-columns: 1fr;
+    }
+    .sidebar {
+        display: none;
+    }
     .app-header {
         height: 50px;
         padding: 0 16px;
     }
 
-    .chat-container {
-        margin-top: 50px;
-        max-width: none;
-    }
+    .chat-container { margin-top: 50px; max-width: none; }
 
     .empty-chat-title {
         font-size: 28px;
@@ -1183,6 +1238,8 @@ p {
 
     .input-container {
         padding: 16px 24px;
+        left: 0; /* Sidebar hidden on mobile */
+        right: 0;
     }
 
     .chat-messages {
@@ -1263,6 +1320,8 @@ p {
 
     .input-container {
         padding: 12px 16px;
+        left: 0; /* Ensure full width on small screens */
+        right: 0;
     }
 
     .chat-messages {

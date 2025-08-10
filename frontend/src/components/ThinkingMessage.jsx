@@ -4,12 +4,10 @@ import { THINKING_STATES, MESSAGES } from '../constants/constants.js';
 export const ThinkingMessage = ({ thinkingProcess, onToggleExpanded }) => {
     const { isActive, state, duration, history, isExpanded } = thinkingProcess;
 
-    // Don't show anything if not active and not completed
     if (!isActive && state !== THINKING_STATES.COMPLETED) {
         return null;
     }
 
-    // Don't show if completed but no history and duration is 0
     if (state === THINKING_STATES.COMPLETED && history.length === 0 && duration === 0) {
         return null;
     }
@@ -40,7 +38,6 @@ export const ThinkingMessage = ({ thinkingProcess, onToggleExpanded }) => {
         }
     };
 
-    // Only clickable if completed and has history
     const isClickable = state === THINKING_STATES.COMPLETED && history.length > 0;
 
     return (

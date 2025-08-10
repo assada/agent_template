@@ -1,7 +1,7 @@
 import logging
 from datetime import UTC, datetime
 
-from langfuse import Langfuse  # type: ignore[attr-defined]
+from langfuse import Langfuse
 
 from app.models import Thread, User
 
@@ -9,14 +9,14 @@ logger = logging.getLogger(__name__)
 
 
 class AgentService:
-    def __init__(self, langfuse: Langfuse):
-        self.langfuse = langfuse
+    def __init__(self, langfuse_client: Langfuse):
+        self._langfuse_client = langfuse_client
 
     async def add_feedback(
-        self, trace: str, feedback: float, thread: Thread, user: User
+            self, trace: str, feedback: float, thread: Thread, user: User
     ) -> dict[str, str]:
         try:
-            self.langfuse.create_score(
+            self._langfuse_client.create_score(
                 trace_id=trace,
                 name="user_feedback",
                 value=feedback,

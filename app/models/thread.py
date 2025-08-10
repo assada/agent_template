@@ -1,8 +1,10 @@
-from datetime import UTC, datetime
+import datetime
+import uuid
 from enum import Enum
 from typing import Any
 
-from pydantic import AwareDatetime, BaseModel, Field
+from sqlalchemy import JSON, DateTime, func
+from sqlmodel import Column, Field, SQLModel
 
 
 class ThreadStatus(Enum):
@@ -12,32 +14,21 @@ class ThreadStatus(Enum):
     error = "error"
 
 
-class Thread(BaseModel):
-    id: str = Field(
-        description="Thread ID.",
-        examples=["edd5a53c-da04-4db4-84e0-a9f3592eef45"],
+class Thread(SQLModel, table=True):
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    created_at: datetime.datetime = Field(
+        default_factory=datetime.datetime.utcnow,
     )
-    created_at: AwareDatetime = Field(
-        default_factory=lambda: datetime.now(UTC),
-        description="The time the thread was created.",
-        examples=["2023-10-01T12:00:00Z"],
-    )
-    updated_at: AwareDatetime = Field(
-        default_factory=lambda: datetime.now(UTC),
-        description="The last time the thread was updated.",
-        examples=["2023-10-01T12:00:00Z"],
+    updated_at: datetime.datetime = Field(
+        sa_column=Column(DateTime(), onupdate=func.now())
     )
     user_id: str = Field(
         description="The ID of the user that owns this thread.",
-        examples=["user-12345"],
     )
     agent_id: str = Field(
         description="The ID of the agent that owns this thread.",
-        examples=["agent-12345"],
     )
-    metadata: dict[str, Any] = Field(
-        ..., description="The thread metadata.", title="Metadata"
-    )
+    meta: dict[str, Any] = Field(default_factory=dict, sa_column=Column(JSON))
     status: ThreadStatus | None = Field(
         default=ThreadStatus.idle,
         description="Thread status to filter on.",
