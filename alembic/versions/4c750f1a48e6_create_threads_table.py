@@ -42,4 +42,4 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
-    op.drop_table("threads")
+    op.drop_table("thread")
