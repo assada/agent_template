@@ -1,5 +1,4 @@
 import logging
-from functools import lru_cache
 
 from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
 
@@ -9,7 +8,6 @@ from app.infrastructure.database.connection import DatabaseConnection
 logger = logging.getLogger(__name__)
 
 
-@lru_cache()
 class PostgresCheckpointer(BaseCheckpointer):
     """PostgreSQL implementation of the checkpointer."""
 
@@ -29,8 +27,7 @@ class PostgresCheckpointer(BaseCheckpointer):
 
     async def cleanup(self) -> None:
         """Clean up PostgreSQL resources."""
-        if self.database_connection:
-            self.database_connection.close()
+        self._checkpointer = None
 
     async def get_checkpointer(self) -> AsyncPostgresSaver:
         """Get the PostgreSQL checkpointer instance."""

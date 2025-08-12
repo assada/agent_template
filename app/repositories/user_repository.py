@@ -2,14 +2,17 @@ import logging
 
 from fastapi import HTTPException
 
+from app.infrastructure.database.session import SessionManager
 from app.models import User
 
 logger = logging.getLogger(__name__)
 
 
 class UserRepository:
-    @staticmethod
-    async def get_user_by_id(user_id: str) -> User | None:
+    def __init__(self, session_manager: SessionManager):
+        self.session_manager = session_manager
+
+    def get_user_by_id(self, user_id: str) -> User | None:
         try:
             if user_id is None:
                 raise HTTPException(status_code=400, detail="Invalid user ID")

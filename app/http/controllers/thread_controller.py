@@ -2,8 +2,7 @@ import logging
 from typing import Any
 from uuid import UUID
 
-from fastapi import Depends, HTTPException
-from langfuse import Langfuse  # type: ignore[attr-defined]
+from fastapi import HTTPException
 from sse_starlette.sse import EventSourceResponse
 
 from app.agent.factory import AgentFactory
@@ -14,24 +13,30 @@ from app.bootstrap.config import AppConfig
 from app.http.requests import FeedbackRequest
 from app.models import Thread, User
 from app.models.thread import ThreadStatus
-from app.repositories import ThreadRepository, UserRepository
+from app.services.thread_service import ThreadService
 
 logger = logging.getLogger(__name__)
 
 
 class ThreadController:
-    def __init__(self, config: AppConfig):
+    def __init__(
+            self,
+            config: AppConfig,
+            agent_factory: AgentFactory,
+            agent_service: AgentService,
+            thread_service: ThreadService,
+    ):
         self.config = config
-        self.langfuse_client = Langfuse(debug=False)
-        self.agent_factory = AgentFactory(config, self.langfuse_client)
+        self._agent_factory = agent_factory
+        self._agent_service = agent_service
+        self._thread_service = thread_service
         self._agent_instances: dict[str, AgentInstance] = {}
-        self._agent_service = AgentService(self.langfuse_client)
 
     async def _get_agent_instance(self, agent_id: str) -> AgentInstance:
         if agent_id in self._agent_instances:
             return self._agent_instances[agent_id]
 
-        agent_instance = await self.agent_factory.create_agent(agent_id)
+        agent_instance = await self._agent_factory.create_agent(agent_id)
 
         self._agent_instances[agent_id] = agent_instance
         logger.debug(f"Created and cached agent instance: {agent_id}")
@@ -39,12 +44,12 @@ class ThreadController:
         return agent_instance
 
     async def stream(
-        self,
-        agent_id: str | None,
-        query: dict[str, Any] | list[Any] | str | float | bool | None,
-        thread_id: UUID | None,
-        metadata: dict[str, Any] | None,
-        user: User,
+            self,
+            agent_id: str | None,
+            query: dict[str, Any] | list[Any] | str | float | bool | None,
+            thread_id: UUID | None,
+            metadata: dict[str, Any] | None,
+            user: User,
     ) -> EventSourceResponse:
         try:
             effective_agent_id = validate_agent_id(agent_id)
@@ -56,20 +61,20 @@ class ThreadController:
             from uuid import uuid4
 
             thread = Thread(
-                id=str(uuid4()),
-                user_id="1437ade37359488e95c0727a1cdf1786d24edce3",
+                id=uuid4(),
+                user_id=str(user.id),
                 status=ThreadStatus.idle,
                 created_at=datetime.now(UTC),
                 updated_at=datetime.now(UTC),
                 agent_id=effective_agent_id,
-                metadata=metadata or {},
+                meta=metadata or {},
             )
-            thread = await ThreadRepository.create_thread(thread)
+            thread = await self._thread_service.create_thread(thread)
         else:
-            thread = await ThreadRepository.get_thread_by_id(str(thread_id))
+            thread = self._thread_service.get_thread(str(thread_id))
             if agent_id and thread.agent_id != effective_agent_id:
                 thread.agent_id = effective_agent_id
-                thread = await ThreadRepository.update_thread(thread)
+                thread = await self._thread_service.update_thread(thread)
 
         try:
             agent_instance = await self._get_agent_instance(thread.agent_id)
@@ -90,9 +95,9 @@ class ThreadController:
             raise HTTPException(status_code=500, detail="Internal server error") from e
 
     async def get_thread_history(
-        self,
-        user: User = Depends(UserRepository.get_user_by_id),  # noqa: B008
-        thread: Thread = Depends(ThreadRepository.get_thread_by_id),  # noqa: B008
+            self,
+            thread: Thread,
+            user: User,
     ) -> EventSourceResponse:
         try:
             agent_instance = await self._get_agent_instance(thread.agent_id)
@@ -111,10 +116,10 @@ class ThreadController:
             raise HTTPException(status_code=500, detail="Internal server error") from e
 
     async def feedback(
-        self,
-        request: FeedbackRequest,
-        user: User = Depends(UserRepository.get_user_by_id),  # noqa: B008
-        thread: Thread = Depends(ThreadRepository.get_thread_by_id),  # noqa: B008
+            self,
+            thread: Thread,
+            request: FeedbackRequest,
+            user: User,
     ) -> dict[str, str]:
         return await self._agent_service.add_feedback(
             trace=request.trace_id, feedback=request.feedback, thread=thread, user=user

@@ -4,13 +4,12 @@ import importlib
 import logging
 from typing import Any
 
-from langfuse import Langfuse  # type: ignore[attr-defined]
+from dependency_injector.wiring import Provide, inject
+from langfuse import Langfuse
 
 from app.agent.config import AgentConfig
 from app.agent.interfaces import AgentInstance
-from app.agent.langgraph.checkpoint.factory import (
-    CheckpointerFactory,
-)
+from app.agent.langgraph.checkpoint.base import BaseCheckpointer
 from app.agent.prompt import create_prompt_provider
 from app.bootstrap.config import AppConfig
 
@@ -32,7 +31,7 @@ class AgentFactory:
 
     @classmethod
     def register_agent(
-        cls, agent_id: str, agent_class_path: str, config: AgentConfig
+            cls, agent_id: str, agent_class_path: str, config: AgentConfig
     ) -> None:
         cls._registered_agents[agent_id] = AgentRegistry(agent_class_path, config)
         logger.info(
@@ -67,7 +66,12 @@ class AgentFactory:
                 f"Failed to import agent class '{class_path}': {e}"
             ) from e
 
-    async def create_agent(self, agent_id: str) -> AgentInstance:
+    @inject
+    async def create_agent(
+            self,
+            agent_id: str,
+            checkpointer_provider: BaseCheckpointer = Provide["checkpointer_provider"],
+    ) -> AgentInstance:
         if agent_id not in self._registered_agents:
             raise ValueError(
                 f"Agent '{agent_id}' not found. Available agents: {self.list_agents()}"
@@ -76,7 +80,7 @@ class AgentFactory:
         registry_entry = self._registered_agents[agent_id]
         agent_config = registry_entry.config
 
-        checkpointer_provider = await CheckpointerFactory.create(self.global_config)
+        await checkpointer_provider.initialize()
         checkpointer = await checkpointer_provider.get_checkpointer()
 
         prompt_provider = create_prompt_provider(

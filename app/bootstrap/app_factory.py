@@ -7,6 +7,7 @@ from fastapi.staticfiles import StaticFiles
 # from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 from prometheus_fastapi_instrumentator import Instrumentator
 
+from app.container import Container
 from app.http.middleware.cors_middleware import CORSConfig, setup_cors_middleware
 from app.utils.utils import is_valid_uuid4
 
@@ -16,6 +17,7 @@ from .config import AppConfig
 
 
 def create_app(config: AppConfig) -> FastAPI:
+    Container()
     register_agents()
 
     app = FastAPI(

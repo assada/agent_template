@@ -1,5 +1,4 @@
 import logging
-from functools import lru_cache
 
 from langgraph.checkpoint.memory import InMemorySaver
 
@@ -8,7 +7,6 @@ from app.agent.langgraph.checkpoint.base import BaseCheckpointer
 logger = logging.getLogger(__name__)
 
 
-@lru_cache()
 class MemoryCheckpointer(BaseCheckpointer):
     """Memory implementation of the checkpointer."""
 
