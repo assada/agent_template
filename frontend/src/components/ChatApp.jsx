@@ -66,14 +66,12 @@ export const ChatApp = () => {
             inputRef.current.focus();
         }
 
-        fetchThreads().then(() => {
-            loadChatHistory();
-        });
+        fetchThreads();
 
         return () => {
             closeConnection();
         };
-    }, [closeConnection, loadChatHistory, fetchThreads]);
+    }, [closeConnection]);
 
     useEffect(() => {
         if (inputRef.current && !input) {

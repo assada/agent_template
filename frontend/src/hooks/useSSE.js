@@ -14,7 +14,11 @@ const USER_ID = '1437ade37359488e95c0727a1cdf1786d24edce3';
 
 export const useSSE = () => {
     const sseRef = useRef(null);
-    const sseVersionRef = useRef(0);
+    const sseVersionRef = useRef(0); // deprecated: kept for safety if referenced elsewhere
+    const runVersionRef = useRef(0);
+    const historyVersionRef = useRef(0);
+    const runEndedRef = useRef(false);
+    const runActiveRef = useRef(false);
     const {
         threads,
         currentThreadId,
@@ -40,46 +44,45 @@ export const useSSE = () => {
     } = useChatStore();
 
     const loadChatHistory = useCallback(async () => {
-        setLoading(true);
-
         try {
-            if (sseRef.current) {
-                sseRef.current.close();
-            }
-
-            const authToken = localStorage.getItem('authToken') || 'eyJ1c2VyX2lkIjogIjE0MzdhZGUzNzM1OTQ4OGU5NWMwNzI3YTFjZGYxNzg2ZDI0ZWRjZTMiLCAiZW1haWwiOiAidGVzdEBnbWFpbC5jb20ifQ==';
-            if (!currentThreadId) {
-                setLoading(false);
+            // If there is no current thread or a run is active, do nothing and do not interrupt the run stream
+            if (!currentThreadId || runActiveRef.current) {
                 return;
             }
 
-            const version = ++sseVersionRef.current;
+            setLoading(true);
+
+            const authToken = localStorage.getItem('authToken') || 'eyJ1c2VyX2lkIjogIjE0MzdhZGUzNzM1OTQ4OGU5NWMwNzI3YTFjZGYxNzg2ZDI0ZWRjZTMiLCAiZW1haWwiOiAidGVzdEBnbWFpbC5jb20ifQ==';
+
+            const version = ++historyVersionRef.current;
 
             clearMessages();
 
             const historicalMessages = [];
-            sseRef.current = new SSE(`/api/v1/threads/${currentThreadId}/history`, {
+            const historySse = new SSE(`/api/v1/threads/${currentThreadId}/history`, {
                 headers: {
-                    'Authorization': 'Bearer ' + authToken
+                    'Authorization': 'Bearer ' + authToken,
+                    'Accept': 'text/event-stream',
+                    'Cache-Control': 'no-cache'
                 },
                 autoReconnect: false,
                 start: false
             });
 
             const handleHistoryMessage = (e) => {
-                if (version !== sseVersionRef.current) return;
+                if (version !== historyVersionRef.current) return;
                 const data = parseEventData(e);
                 if (!data) return;
                 historicalMessages.push(data);
             };
 
             const handleHistoryOpen = () => {
-                if (version !== sseVersionRef.current) return;
+                if (version !== historyVersionRef.current) return;
                 console.log('History SSE connection opened');
             };
 
             const handleHistoryError = (e) => {
-                if (version !== sseVersionRef.current) return;
+                if (version !== historyVersionRef.current) return;
                 console.error('History SSE Error:', e);
                 const errorMessage = extractErrorMessage(e);
                 addMessage(errorMessage, SENDER_TYPES.SYSTEM, MESSAGE_SUBTYPES.ERROR, CSS_CLASSES.ERROR);
@@ -87,7 +90,7 @@ export const useSSE = () => {
             };
 
             const handleHistoryEnd = () => {
-                if (version !== sseVersionRef.current) return;
+                if (version !== historyVersionRef.current) return;
                 console.log('History loading completed');
 
                 if (historicalMessages.length > 0) {
@@ -95,28 +98,26 @@ export const useSSE = () => {
                 }
 
                 setLoading(false);
-                if (sseRef.current) {
-                    sseRef.current.close();
-                    sseRef.current = null;
-                }
+                // Close only the history stream
+                historySse.close();
             };
 
-            sseRef.current.addEventListener('open', handleHistoryOpen);
-            sseRef.current.addEventListener('ai_message', handleHistoryMessage);
-            sseRef.current.addEventListener('human_message', handleHistoryMessage);
-            sseRef.current.addEventListener('ui', handleHistoryMessage);
-            sseRef.current.addEventListener('tool_call', handleHistoryMessage);
-            sseRef.current.addEventListener('tool_result', handleHistoryMessage);
-            sseRef.current.addEventListener('error', handleHistoryError);
-            sseRef.current.addEventListener('stream_end', handleHistoryEnd);
-            sseRef.current.addEventListener('readystatechange', (e) => {
-                if (version !== sseVersionRef.current) return;
+            historySse.addEventListener('open', handleHistoryOpen);
+            historySse.addEventListener('ai_message', handleHistoryMessage);
+            historySse.addEventListener('human_message', handleHistoryMessage);
+            historySse.addEventListener('ui', handleHistoryMessage);
+            historySse.addEventListener('tool_call', handleHistoryMessage);
+            historySse.addEventListener('tool_result', handleHistoryMessage);
+            historySse.addEventListener('error', handleHistoryError);
+            historySse.addEventListener('stream_end', handleHistoryEnd);
+            historySse.addEventListener('readystatechange', (e) => {
+                if (version !== historyVersionRef.current) return;
                 if (e.readyState === 2) {
                     setLoading(false);
                 }
             });
 
-            sseRef.current.stream();
+            historySse.stream();
 
         } catch (error) {
             console.error('Error loading chat history:', error);
@@ -206,13 +207,19 @@ export const useSSE = () => {
 
         setLoading(false);
         setSending(false);
+        runActiveRef.current = false;
     }, [setConnectionStatus, extractErrorMessage, addMessage, setLoading, setSending]);
 
     const handleSSEAbort = useCallback(() => {
+        // Ignore aborts while run is active and not ended (some browsers emit abort transiently)
+        if (runActiveRef.current && !runEndedRef.current) {
+            return;
+        }
         console.log('SSE connection closed - resetting sending state');
         setConnectionStatus(STATUSES.DISCONNECTED, MESSAGES.DISCONNECTED);
         setSending(false);
         setLoading(false);
+        runActiveRef.current = false;
     }, [setConnectionStatus, setSending, setLoading]);
 
     const handleReadyStateChange = useCallback((e) => {
@@ -223,11 +230,14 @@ export const useSSE = () => {
         };
 
         const [status, message] = stateMessages[e.readyState] || [];
-        if (status && message) {
-            setConnectionStatus(status, message);
-            if (e.readyState === 2) {
-                setSending(false);
-            }
+        if (!status || !message) return;
+        // Avoid flipping to DISCONNECTED mid-run unless we've ended
+        if (e.readyState === 2 && runActiveRef.current && !runEndedRef.current) {
+            return;
+        }
+        setConnectionStatus(status, message);
+        if (e.readyState === 2) {
+            setSending(false);
         }
     }, [setConnectionStatus, setSending]);
 
@@ -243,6 +253,8 @@ export const useSSE = () => {
         if (sseRef.current) {
             sseRef.current.close();
         }
+        runActiveRef.current = false;
+        runEndedRef.current = true;
     }, [completeThinkingProcess, finalizeAssistantMessage, setSending, setLoading, setConnectionStatus]);
 
     const setupSSEListeners = useCallback(() => {
@@ -299,14 +311,19 @@ export const useSSE = () => {
         setLoading(true);
         clearCurrentAssistantMessage();
         startThinkingProcess();
+        runActiveRef.current = true;
+        runEndedRef.current = false;
 
         try {
             const authToken = localStorage.getItem('authToken') || 'eyJ1c2VyX2lkIjogIjE0MzdhZGUzNzM1OTQ4OGU5NWMwNzI3YTFjZGYxNzg2ZDI0ZWRjZTMiLCAiZW1haWwiOiAidGVzdEBnbWFpbC5jb20ifQ==';
-            const version = ++sseVersionRef.current;
+            const version = ++runVersionRef.current;
             sseRef.current = new SSE(`/api/v1/runs/stream`, {
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': 'Bearer ' + authToken
+                    'Authorization': 'Bearer ' + authToken,
+                    'Accept': 'text/event-stream',
+                    'Cache-Control': 'no-cache',
+                    'Connection': 'keep-alive'
                 },
                 payload: JSON.stringify({
                     input: message,
@@ -324,16 +341,14 @@ export const useSSE = () => {
                 if (!sseRef.current) return;
                 const handlers = {
                     'open': handleSSEOpen,
-                    'thread': (e) => { if (version !== sseVersionRef.current) return; const data = parseEventData(e); if (data?.id) { const id = String(data.id); setCurrentThreadId(id); const exists = (useChatStore.getState().threads || []).some(t => String(t.id) === id); if (!exists) { addThread({ id, agent_id: data.agent_id, meta: data.meta || {}, status: data.status }); } } },
-                    'ai_message': (e) => { if (version !== sseVersionRef.current) return; handleAIMessage(e); },
-                    'tool_call': (e) => { if (version !== sseVersionRef.current) return; handleToolCall(e); },
-                    'tool_result': (e) => { if (version !== sseVersionRef.current) return; handleToolResult(e); },
-                    'token': (e) => { if (version !== sseVersionRef.current) return; handleToken(e); },
-                    'ui': (e) => { if (version !== sseVersionRef.current) return; handleUIMessage(e); },
-                    'error': (e) => { if (version !== sseVersionRef.current) return; handleSSEError(e); },
-                    'abort': (e) => { if (version !== sseVersionRef.current) return; handleSSEAbort(e); },
-                    'readystatechange': (e) => { if (version !== sseVersionRef.current) return; handleReadyStateChange(e); },
-                    'stream_end': (e) => { if (version !== sseVersionRef.current) return; handleStreamEnd(e); },
+                    'thread': (e) => { if (version !== runVersionRef.current) return; const data = parseEventData(e); if (data?.id) { const id = String(data.id); setCurrentThreadId(id); const exists = (useChatStore.getState().threads || []).some(t => String(t.id) === id); if (!exists) { addThread({ id, agent_id: data.agent_id, meta: data.meta || {}, status: data.status }); } } },
+                    'ai_message': (e) => { if (version !== runVersionRef.current) return; handleAIMessage(e); },
+                    'tool_call': (e) => { if (version !== runVersionRef.current) return; handleToolCall(e); },
+                    'tool_result': (e) => { if (version !== runVersionRef.current) return; handleToolResult(e); },
+                    'token': (e) => { if (version !== runVersionRef.current) return; handleToken(e); },
+                    'ui': (e) => { if (version !== runVersionRef.current) return; handleUIMessage(e); },
+                    'error': (e) => { if (version !== runVersionRef.current) return; handleSSEError(e); },
+                    'stream_end': (e) => { if (version !== runVersionRef.current) return; handleStreamEnd(e); },
                 };
                 Object.entries(handlers).forEach(([event, handler]) => sseRef.current.addEventListener(event, handler));
             };
@@ -362,6 +377,7 @@ export const useSSE = () => {
             sseRef.current.close();
             sseRef.current = null;
         }
+        runActiveRef.current = false;
     }, []);
 
     const fetchThreads = useCallback(async () => {

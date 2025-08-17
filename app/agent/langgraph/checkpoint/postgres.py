@@ -20,7 +20,7 @@ class PostgresCheckpointer(BaseCheckpointer):
         if self._checkpointer is None:
             pool = await self.database_connection.get_pool()
             self._checkpointer = AsyncPostgresSaver(pool)
-            await self._checkpointer.setup()
+            await self._checkpointer.setup() ## TODO: do not await
             logger.debug(
                 "PostgreSQL checkpoint provider initialized with connection pool"
             )
