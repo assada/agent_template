@@ -34,8 +34,6 @@ services:
       - DATABASE_URL=postgresql://postgres:postgres@db:5432/agent_template
     volumes:
       - .:/app
-      - /app/node_modules
-      - /app/frontend/node_modules
     restart: unless-stopped
 
 volumes:

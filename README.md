@@ -41,7 +41,6 @@ Use it as a starting point for building custom AI agents with solid HTTP and obs
 
 1. `uv venv`
 2. `uv sync`
-3. `cd frontend`
 4. `npm run build`
 5. `cd ..`
 6. `uv run dev`
@@ -49,8 +48,6 @@ Use it as a starting point for building custom AI agents with solid HTTP and obs
 ## Status
 
 This is still a work in progress, but usable.
-Yes, the frontend is vibe-coded. No, I won’t fix it.
-Feel free to rewrite it.
 
 PRs welcome for:
 

@@ -12,10 +12,6 @@ class AppConfig(BaseModel):
     debug: bool = False
     reload: bool = False
 
-    static_files_directory: str = "frontend/dist"
-
-    secret_key: str | None = None
-
     cors_origins: list[str] = ["*"]
     cors_allow_credentials: bool = True
     cors_allow_methods: list[str] = ["*"]
@@ -24,10 +20,6 @@ class AppConfig(BaseModel):
     database_url: str | None = None
     checkpoint_type: str = "memory"  # Options: memory, postgres
 
-    class Config:
-        env_file = ".env"
-        env_file_encoding = "utf-8"
-
 
 def get_config() -> AppConfig:
     return AppConfig(
@@ -35,8 +27,6 @@ def get_config() -> AppConfig:
         reload=os.getenv("RELOAD", "false").lower() == "true",
         host=os.getenv("HOST", "127.0.0.1"),
         port=int(os.getenv("PORT", "8000")),
-        static_files_directory=os.getenv("STATIC_FILES_DIR", "frontend/dist"),
-        secret_key=os.getenv("SECRET_KEY"),
         cors_origins=os.getenv("CORS_ORIGINS", "*").split(","),
         database_url=os.getenv(
             "DATABASE_URL",

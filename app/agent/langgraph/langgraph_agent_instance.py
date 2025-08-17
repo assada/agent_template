@@ -30,18 +30,18 @@ class LangGraphAgentInstance(AgentInstance):
             self,
             agent_id: str,
             graph: CompiledStateGraph[Any, Any, Any],
-            langfuse: Langfuse,
+            tracing_client: Langfuse,
             config: AppConfig | None = None,
     ):
         super().__init__(agent_id, config or AppConfig())
         self.graph = graph
-        self.langfuse = langfuse
+        self._tracing_client = tracing_client
         self.stream_processor = StreamProcessor()
 
     async def stream_response(  # type: ignore[override]
             self, message: str, thread: Thread, user: User
     ) -> AsyncGenerator[dict[str, Any]]:
-        with self.langfuse.start_as_current_span(
+        with self._tracing_client.start_as_current_span(
                 name=self.graph.name, input=message
         ) as span:
             run_id = uuid4()

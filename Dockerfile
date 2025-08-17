@@ -10,27 +10,15 @@ RUN apt-get update && apt-get install -y \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
-    && apt-get install -y nodejs
-
 RUN pip install uv
 
 COPY pyproject.toml uv.lock ./
 
 RUN uv sync --frozen
 
-COPY frontend/package*.json ./frontend/
-WORKDIR /app/frontend
-RUN npm ci
-
-COPY frontend/ .
-RUN npm run build
-
 WORKDIR /app
 
 COPY . .
-
-RUN mkdir -p frontend/dist
 
 EXPOSE 8000
 

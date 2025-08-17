@@ -55,11 +55,5 @@ rebuild-app: ## Rebuild and restart app service
 install: ## Install dependencies locally
 	uv sync
 
-frontend-build: ## Build frontend locally
-	cd frontend && npm install && npm run build
-
-frontend-dev: ## Start frontend in development mode
-	cd frontend && npm run dev
-
 run-local: ## Run application locally
 	uv run python main.py 

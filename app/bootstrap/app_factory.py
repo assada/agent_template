@@ -2,10 +2,9 @@ from uuid import uuid4
 
 from asgi_correlation_id import CorrelationIdMiddleware
 from fastapi import FastAPI
-from fastapi.staticfiles import StaticFiles
 
 # from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
-from prometheus_fastapi_instrumentator import Instrumentator
+from prometheus_fastapi_instrumentator import Instrumentator as PrometheusInstrumentator
 
 from app.container import Container
 from app.http.middleware.cors_middleware import CORSConfig, setup_cors_middleware
@@ -49,17 +48,8 @@ def create_app(config: AppConfig) -> FastAPI:
     app.include_router(health_router, prefix="/api/v1")
 
     # FastAPIInstrumentor.instrument_app(app, excluded_urls="/api/v1/health*,/docs,/metrics,/openapi.json")
-    Instrumentator(
+    PrometheusInstrumentator(
         excluded_handlers=["/docs", "/metrics", "/api/v1/health*", "/openapi.json"],
     ).instrument(app).expose(app)
-
-    try:
-        app.mount(
-            "/",
-            StaticFiles(directory=config.static_files_directory, html=True),
-            name="frontend",
-        )
-    except RuntimeError:
-        pass
 
     return app

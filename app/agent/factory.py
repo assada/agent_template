@@ -80,10 +80,10 @@ class AgentFactory:
         registry_entry = self._registered_agents[agent_id]
         agent_config = registry_entry.config
 
-        await checkpointer_provider.initialize()
+        await checkpointer_provider.initialize() ## TODO: Refactor. Different agents may require different checkpointers, so we should not call initialize here. And we should just call smth like checkpointer_resolve(agent_config.checkpointer) which will return checkpointer by agent config or name
         checkpointer = await checkpointer_provider.get_checkpointer()
 
-        prompt_provider = create_prompt_provider(
+        prompt_provider = create_prompt_provider( ## TODO: Refactor. I think prompt providers should be registered in container and here we want to call smth like prompt_resolve(agent_config.prompt_provider) witch will return prompt provider by agent config or name
             prompt_source=agent_config.prompt_source,
             langfuse_client=self._langfuse_client
             if agent_config.prompt_source == "langfuse"
@@ -107,6 +107,6 @@ class AgentFactory:
         return LangGraphAgentInstance(
             agent_id=agent_id,
             graph=compiled_graph,
-            langfuse=self._langfuse_client,
+            tracing_client=self._langfuse_client,
             config=self.global_config,
         )
