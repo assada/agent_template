@@ -145,7 +145,7 @@ class Graph(ABC):
             AIMessage,
             await chain.ainvoke(
                 {"history": state.messages},
-                config=config,  # TODO: Pass handler here?
+                config=config,
             ),
         )
 

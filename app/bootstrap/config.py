@@ -19,6 +19,7 @@ class AppConfig(BaseModel):
 
     database_url: str | None = None
     checkpoint_type: str = "memory"  # Options: memory, postgres
+    prompt_root_dir: str = "data/prompts"
 
 
 def get_config() -> AppConfig:
@@ -33,4 +34,5 @@ def get_config() -> AppConfig:
             "postgresql://postgres:postgres@localhost:5432/agent_template",
         ),
         checkpoint_type=os.getenv("CHECKPOINT_TYPE", "memory"),
+        prompt_root_dir=os.getenv("PROMPT_ROOT_DIR", "agents/prompt"),
     )

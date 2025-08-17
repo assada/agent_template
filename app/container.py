@@ -6,28 +6,22 @@ from sqlmodel import Session
 
 from app.bootstrap.config import get_config
 
-from .agent.langgraph.checkpoint.base import BaseCheckpointer
 from .agent.langgraph.checkpoint.memory import MemoryCheckpointer
 from .agent.langgraph.checkpoint.postgres import PostgresCheckpointer
-from .bootstrap.config import AppConfig
+from .agent.langgraph.checkpoint.resolver import CheckpointerResolver
 from .infrastructure import DatabaseConnection
 from .infrastructure.database import PostgreSQLConnection, SQLModelManager
 from .infrastructure.database.session import SessionManager
 
 
-def create_checkpointer(
-        config: AppConfig,
+def create_checkpointer_resolver(
         memory_checkpointer: MemoryCheckpointer,
         postgres_checkpointer: PostgresCheckpointer,
-) -> BaseCheckpointer:
-    checkpoint_type = config.checkpoint_type.lower()
-
-    if checkpoint_type == "memory":
-        return memory_checkpointer
-    elif checkpoint_type == "postgres":
-        return postgres_checkpointer
-    else:
-        raise ValueError(f"Unsupported checkpointer type: {checkpoint_type}")
+) -> CheckpointerResolver:
+    return CheckpointerResolver(
+        memory_checkpointer=memory_checkpointer,
+        postgres_checkpointer=postgres_checkpointer,
+    )
 
 
 def create_session(sqlmodel_manager: SQLModelManager) -> Session:
@@ -77,9 +71,8 @@ class Container(containers.DeclarativeContainer):
         database_connection=db_connection,
     )
 
-    checkpointer_provider: providers.Singleton[Any] = providers.Singleton(  ## TODO: Remove this
-        create_checkpointer,
-        config=config,
+    checkpointer_resolver: providers.Singleton[Any] = providers.Singleton(
+        create_checkpointer_resolver,
         memory_checkpointer=memory_checkpointer,
         postgres_checkpointer=postgres_checkpointer,
     )
@@ -89,10 +82,18 @@ class Container(containers.DeclarativeContainer):
         debug=False,
     )
 
+    prompt_provider_resolver: providers.Singleton[Any] = providers.Singleton(
+        "app.agent.prompt_resolver.PromptProviderResolver",
+        config=config,
+        langfuse_client=langfuse_client,
+    )
+
     agent_factory: providers.Singleton[Any] = providers.Singleton(
         "app.agent.factory.AgentFactory",
         global_config=config,
         langfuse_client=langfuse_client,
+        checkpointer_resolver=checkpointer_resolver,
+        prompt_provider_resolver=prompt_provider_resolver,
     )
 
     agent_service: providers.Singleton[Any] = providers.Singleton(
