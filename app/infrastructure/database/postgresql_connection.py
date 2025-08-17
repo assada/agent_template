@@ -34,7 +34,7 @@ class PostgreSQLConnection(DatabaseConnection):
     async def get_async_connection(self) -> AsyncConnection:
         pool = await self.get_pool()
         try:
-            return await pool.getconn()
+            return await pool.getconn()  ## pool.connection()
         except Exception as e:
             logger.error(f"Failed to get connection from pool: {e}")
             raise
@@ -44,8 +44,8 @@ class PostgreSQLConnection(DatabaseConnection):
             try:
                 self._pool = AsyncConnectionPool(
                     conninfo=self.get_connection_string(),
-                    min_size=1,
-                    max_size=20,
+                    min_size=20,
+                    max_size=50,
                     kwargs=self._connection_kwargs,
                 )
                 await self._pool.wait()

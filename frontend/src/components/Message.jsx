@@ -14,8 +14,7 @@ export const Message = ({ message, showActions = true, onToggleThinkingExpanded 
     const isCurrentAssistant = id === 'current-assistant';
     const isRegularMessage = messageType === MESSAGE_SUBTYPES.MESSAGE;
     const isUIMessage = messageType === MESSAGE_SUBTYPES.UI;
-    
-    // If this is a thinking message, display it as ThinkingMessage
+
     if (thinkingData) {
         const thinkingProcess = {
             isActive: false,

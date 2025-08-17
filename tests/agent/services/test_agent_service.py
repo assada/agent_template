@@ -34,7 +34,7 @@ def mock_thread():
         id="test_thread_id",
         user_id="test_user_id",
         agent_id="test_agent_id",
-        metadata={"key": "value"},
+        meta={"key": "value"},
         status=ThreadStatus.idle,
         created_at=datetime.now(UTC),
         updated_at=datetime.now(UTC),
@@ -53,4 +53,4 @@ class TestAgentService:
         r = await agent_service.add_feedback("tr", 1.0, mock_thread, mock_user)
         assert r["status"] == "success"
         assert mock_thread.updated_at > t0
-        agent_service.langfuse.create_score.assert_called_once()
+        agent_service._langfuse_client.create_score.assert_called_once()

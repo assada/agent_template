@@ -10,7 +10,7 @@ from typing import Any
 from pydantic import BaseModel, Field
 
 try:
-    from langfuse import Langfuse as _LF  # type: ignore[attr-defined]
+    from langfuse import Langfuse as _LF
 except ImportError:
     _LF = None  # type: ignore[misc, assignment]
 
@@ -111,15 +111,15 @@ class JsonFilePromptProvider(PromptProvider):
 
 
 def create_prompt_provider(
-    prompt_source: str,
-    langfuse_client: object | None = None,
-    prompt_dir: str | Path | None = None,
+        prompt_source: str,
+        langfuse_client: object | None = None,
+        prompt_dir: str | Path | None = None,
 ) -> PromptProvider:
     if prompt_source.lower() == "langfuse":
         if (
-            langfuse_client is None
-            or _LF is None
-            or not isinstance(langfuse_client, _LF)
+                langfuse_client is None
+                or _LF is None
+                or not isinstance(langfuse_client, _LF)
         ):
             raise ValueError("Langfuse client is required for langfuse prompt type")
         return LangfusePromptProvider(langfuse_client)

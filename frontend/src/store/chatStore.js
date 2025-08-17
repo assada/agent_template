@@ -2,6 +2,9 @@ import { create } from 'zustand';
 import { STATUSES, MESSAGES, SENDER_TYPES, MESSAGE_SUBTYPES, CSS_CLASSES, THINKING_STATES } from '../constants/constants.js';
 
 export const useChatStore = create((set, get) => ({
+    threads: [],
+    currentThreadId: null,
+    isSidebarOpen: true,
     messages: [],
     input: '',
     isLoading: false,
@@ -18,11 +21,25 @@ export const useChatStore = create((set, get) => ({
         startTime: null,
         endTime: null,
         duration: 0,
-        history: [], // Array of { type, timestamp, content }
+        history: [],
         isExpanded: false
     },
     
     setInput: (input) => set({ input }),
+
+    setThreads: (threads) => set({ threads }),
+
+    setCurrentThreadId: (threadId) => set({ currentThreadId: threadId }),
+
+    addThread: (thread) => set((state) => ({
+        threads: [thread, ...state.threads],
+        currentThreadId: thread.id,
+    })),
+
+    removeThread: (threadId) => set((state) => ({
+        threads: state.threads.filter(t => String(t.id) !== String(threadId)),
+        currentThreadId: state.currentThreadId === threadId ? null : state.currentThreadId,
+    })),
     
     setLoading: (isLoading) => set({ isLoading }),
     
@@ -136,6 +153,12 @@ export const useChatStore = create((set, get) => ({
     
     clearCurrentAssistantMessage: () => set({ currentAssistantMessage: '', currentAssistantTraceId: null }),
 
+    clearMessages: () => set({
+        messages: [],
+        currentAssistantMessage: '',
+        currentAssistantTraceId: null,
+    }),
+
     startThinkingProcess: () => set((state) => ({
         thinkingProcess: {
             ...state.thinkingProcess,
@@ -233,6 +256,30 @@ export const useChatStore = create((set, get) => ({
     })),
     
     reset: () => set({
+        threads: [],
+        currentThreadId: null,
+        messages: [],
+        input: '',
+        isLoading: false,
+        isSending: false,
+        connectionStatus: {
+            status: STATUSES.DISCONNECTED,
+            message: MESSAGES.READY
+        },
+        currentAssistantMessage: '',
+        currentAssistantTraceId: null,
+        thinkingProcess: {
+            isActive: false,
+            state: THINKING_STATES.THINKING,
+            startTime: null,
+            endTime: null,
+            duration: 0,
+            history: [],
+            isExpanded: false
+        }
+    }),
+
+    resetChatContext: () => set({
         messages: [],
         input: '',
         isLoading: false,

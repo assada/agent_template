@@ -4,6 +4,7 @@ import {useSSE} from '../hooks/index.js';
 import {Message} from './Message.jsx';
 import {ThinkingMessage} from './ThinkingMessage.jsx';
 import {ConnectionStatus} from './ConnectionStatus.jsx';
+import {ThreadList} from './ThreadList.jsx';
 import {MESSAGE_SUBTYPES, SENDER_TYPES, THINKING_STATES} from '../constants/constants.js';
 
 export const ChatApp = () => {
@@ -23,7 +24,7 @@ export const ChatApp = () => {
         toggleThinkingMessageExpanded
     } = useChatStore();
 
-    const {sendMessage, closeConnection, loadChatHistory} = useSSE();
+    const {sendMessage, closeConnection, loadChatHistory, fetchThreads, setCurrentThreadId, newChat} = useSSE();
     const messagesEndRef = useRef(null);
     const inputRef = useRef(null);
 
@@ -65,14 +66,15 @@ export const ChatApp = () => {
             inputRef.current.focus();
         }
 
-        loadChatHistory();
+        fetchThreads().then(() => {
+            loadChatHistory();
+        });
 
         return () => {
             closeConnection();
         };
-    }, [closeConnection, loadChatHistory]);
+    }, [closeConnection, loadChatHistory, fetchThreads]);
 
-    // Reset textarea height when input is cleared
     useEffect(() => {
         if (inputRef.current && !input) {
             inputRef.current.style.height = 'auto';
@@ -99,7 +101,6 @@ export const ChatApp = () => {
     const handleInputChange = useCallback((e) => {
         setInput(e.target.value);
 
-        // Auto-resize textarea
         const textarea = e.target;
         textarea.style.height = 'auto';
         textarea.style.height = Math.min(textarea.scrollHeight, 200) + 'px';
@@ -117,8 +118,13 @@ export const ChatApp = () => {
                 </button>
             </header>
 
-            <div className="chat-container">
-                <div className="chat-messages">
+            <div className="app-content">
+                <aside className="sidebar">
+                    <button className="new-chat-btn" onClick={newChat}>New chat</button>
+                    <ThreadList onSelect={(id) => { setCurrentThreadId(id); loadChatHistory(); }} />
+                </aside>
+                <div className="chat-container">
+                    <div className="chat-messages">
                     {messages.length === 0 && !currentAssistantMessage && (
                         <div className="empty-chat-header">
                             <div className="empty-chat-content">
@@ -155,7 +161,8 @@ export const ChatApp = () => {
                         />
                     )}
 
-                    <div ref={messagesEndRef}/>
+                        <div ref={messagesEndRef}/>
+                    </div>
                 </div>
             </div>
 

@@ -55,7 +55,7 @@ export const MessageActions = ({ content, messageId, traceId, isUser = false }) 
     }, [traceId, getUserId, getThreadId, isSubmittingFeedback]);
 
     const handleRating = useCallback(async (ratingValue) => {
-        if (rating === ratingValue) return; // Don't submit if already rated with same value
+        if (rating === ratingValue) return;
         
         setRating(ratingValue);
         
@@ -63,7 +63,6 @@ export const MessageActions = ({ content, messageId, traceId, isUser = false }) 
         await submitFeedback(feedbackValue);
     }, [rating, submitFeedback]);
 
-    // Don't render if no trace_id
     if (!traceId) {
         return null;
     }
@@ -80,7 +79,6 @@ export const MessageActions = ({ content, messageId, traceId, isUser = false }) 
             </button>
             
             {isUser ? (
-                // Actions for user messages
                 <button 
                     className="action-button edit-button"
                     title="Edit message"
@@ -90,7 +88,6 @@ export const MessageActions = ({ content, messageId, traceId, isUser = false }) 
                     </svg>
                 </button>
             ) : (
-                // Actions for assistant messages
                 <>
                     <button 
                         className={`action-button rating-button ${rating === 'good' ? 'active' : ''}`}
