@@ -44,11 +44,12 @@ class PostgreSQLConnection(DatabaseConnection):
             try:
                 self._pool = AsyncConnectionPool(
                     conninfo=self.get_connection_string(),
-                    min_size=20,
-                    max_size=50,
+                    min_size=1,
+                    max_size=20,
                     kwargs=self._connection_kwargs,
+                    open=False,
                 )
-                await self._pool.wait()
+                await self._pool.open()
                 logger.debug("PostgreSQL connection pool initialized")
             except Exception as e:
                 logger.error(f"Failed to initialize PostgreSQL connection pool: {e}")
