@@ -4,7 +4,7 @@ from pydantic import BaseModel
 
 
 class AgentConfig(BaseModel):
-    prompt_source: str = "file"
+    prompt_source: Literal["file", "langfuse"] = "file"
     checkpoint_type: Literal["memory", "postgres"] = "memory"
 
     custom_params: dict[str, Any] = {}

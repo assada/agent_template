@@ -34,5 +34,5 @@ def get_config() -> AppConfig:
             "postgresql://postgres:postgres@localhost:5432/agent_template",
         ),
         checkpoint_type=os.getenv("CHECKPOINT_TYPE", "memory"),
-        prompt_root_dir=os.getenv("PROMPT_ROOT_DIR", "agents/prompt"),
+        prompt_root_dir=os.getenv("PROMPT_ROOT_DIR", "data/prompts"),
     )
