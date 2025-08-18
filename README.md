@@ -70,13 +70,13 @@ PRs welcome for:
 - [x] Add Langfuse integration
 - [x] Add tests
 - [x] refactor checkpointer shit factory
-- [ ] 🟠 [**raw api implemented**] thread management Create/Update/Delete (thread model(ulid, user_id, created/updated,
+- [x] thread management Create/Update/Delete (thread model(ulid, user_id, created/updated,
   title, status[]))
-- [ ] 🟠 [**50/50 DONE**] Store the thread history in the database (with all custom messages and metadata)
-- [ ] 🟠 Add a way to define a custom agent in config?
+- [x] Store the thread history in the database (with all custom messages and metadata)
+- [x] Add a way to define a custom agent in config?
 - [ ] ~~Add Langsmith integration~~
 - [ ] ~~Keep alive SSE connection until the user closes the browser tab (??)~~
-- [ ] 🟡 Add a way to validate the user's access token (OAuth2)
+- [x] Add a way to validate the user's access token (OAuth2)
 - [ ] 🟡 Add evaluation metrics
 - [ ] 🔴 Add *one more* abstraction layer so the agent can use different frameworks (LangGraph, LlamaIndex, etc.)
 - [ ] 🟠 Add even more fucking abstractions to make it independent of observability tools (LangFuse, LangSmith, Grafana
