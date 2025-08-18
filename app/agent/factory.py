@@ -4,13 +4,12 @@ import importlib
 import logging
 from typing import Any
 
-from dependency_injector.wiring import Provide, inject
 from langfuse import Langfuse
 
 from app.agent.config import AgentConfig
 from app.agent.interfaces import AgentInstance
-from app.agent.langgraph.checkpoint.base import BaseCheckpointer
-from app.agent.prompt import create_prompt_provider
+from app.agent.langgraph.checkpoint.resolver import CheckpointerResolver
+from app.agent.prompt_resolver import PromptProviderResolver
 from app.bootstrap.config import AppConfig
 
 logger = logging.getLogger(__name__)
@@ -25,9 +24,17 @@ class AgentRegistry:
 class AgentFactory:
     _registered_agents: dict[str, AgentRegistry] = {}
 
-    def __init__(self, global_config: AppConfig, langfuse_client: Langfuse):
+    def __init__(
+            self,
+            global_config: AppConfig,
+            langfuse_client: Langfuse,
+            checkpointer_resolver: CheckpointerResolver,
+            prompt_provider_resolver: PromptProviderResolver,
+    ):
         self.global_config = global_config
         self._langfuse_client = langfuse_client
+        self._checkpointer_resolver = checkpointer_resolver
+        self._prompt_provider_resolver = prompt_provider_resolver
 
     @classmethod
     def register_agent(
@@ -66,11 +73,9 @@ class AgentFactory:
                 f"Failed to import agent class '{class_path}': {e}"
             ) from e
 
-    @inject
     async def create_agent(
             self,
             agent_id: str,
-            checkpointer_provider: BaseCheckpointer = Provide["checkpointer_provider"],
     ) -> AgentInstance:
         if agent_id not in self._registered_agents:
             raise ValueError(
@@ -80,17 +85,11 @@ class AgentFactory:
         registry_entry = self._registered_agents[agent_id]
         agent_config = registry_entry.config
 
-        await checkpointer_provider.initialize() ## TODO: Refactor. Different agents may require different checkpointers, so we should not call initialize here. And we should just call smth like checkpointer_resolve(agent_config.checkpointer) which will return checkpointer by agent config or name
-        checkpointer = await checkpointer_provider.get_checkpointer()
+        checkpointer = await self._checkpointer_resolver.get_saver(agent_config.checkpoint_type)
 
-        prompt_provider = create_prompt_provider( ## TODO: Refactor. I think prompt providers should be registered in container and here we want to call smth like prompt_resolve(agent_config.prompt_provider) witch will return prompt provider by agent config or name
-            prompt_source=agent_config.prompt_source,
-            langfuse_client=self._langfuse_client
-            if agent_config.prompt_source == "langfuse"
-            else None,
-            prompt_dir=agent_config.prompt_dir
-            if agent_config.prompt_source == "file"
-            else None,
+        prompt_provider = self._prompt_provider_resolver.resolve(
+            agent_config.prompt_source,
+            agent_name=agent_id,
         )
 
         agent_class = self._load_agent_class(agent_id)

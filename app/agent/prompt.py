@@ -58,7 +58,7 @@ class LangfusePromptProvider(PromptProvider):
 
 
 class JsonFilePromptProvider(PromptProvider):
-    """Prompt provider that reads prompts from JSON files in *root_dir*.
+    """Prompt provider that reads prompts from JSON files in *prompt_root_dir*/*agent_name*.
 
     File naming convention: ``<prompt_name>.json``
     Expected structure inside file::
@@ -72,7 +72,7 @@ class JsonFilePromptProvider(PromptProvider):
     If *label* is not found, *fallback* is returned.
     """
 
-    def __init__(self, root_dir: str | Path = "agents/prompt") -> None:
+    def __init__(self, root_dir: str | Path = "data/prompts") -> None:
         self._root_dir = Path(root_dir)
         self._root_dir.mkdir(parents=True, exist_ok=True)
 
@@ -108,24 +108,4 @@ class JsonFilePromptProvider(PromptProvider):
             config=config,
             metadata={"file_path": str(path), "label": label},
         )
-
-
-def create_prompt_provider(
-        prompt_source: str,
-        langfuse_client: object | None = None,
-        prompt_dir: str | Path | None = None,
-) -> PromptProvider:
-    if prompt_source.lower() == "langfuse":
-        if (
-                langfuse_client is None
-                or _LF is None
-                or not isinstance(langfuse_client, _LF)
-        ):
-            raise ValueError("Langfuse client is required for langfuse prompt type")
-        return LangfusePromptProvider(langfuse_client)
-    elif prompt_source.lower() == "file":
-        return JsonFilePromptProvider(prompt_dir or "agents/prompt")
-    else:
-        raise ValueError(
-            f"Unknown prompt source: {prompt_source}. Supported types: 'langfuse', 'file'"
-        )
+ 
