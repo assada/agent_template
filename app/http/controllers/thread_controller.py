@@ -20,11 +20,11 @@ logger = logging.getLogger(__name__)
 
 class ThreadController:
     def __init__(
-            self,
-            config: AppConfig,
-            agent_factory: AgentFactory,
-            agent_service: AgentService,
-            thread_service: ThreadService,
+        self,
+        config: AppConfig,
+        agent_factory: AgentFactory,
+        agent_service: AgentService,
+        thread_service: ThreadService,
     ):
         self.config = config
         self._agent_factory = agent_factory
@@ -44,12 +44,12 @@ class ThreadController:
         return agent_instance
 
     async def stream(
-            self,
-            agent_id: str | None,
-            query: dict[str, Any] | list[Any] | str | float | bool | None,
-            thread_id: UUID | None,
-            metadata: dict[str, Any] | None,
-            user: User,
+        self,
+        agent_id: str | None,
+        query: dict[str, Any] | list[Any] | str | float | bool | None,
+        thread_id: UUID | None,
+        metadata: dict[str, Any] | None,
+        user: User,
     ) -> EventSourceResponse:
         try:
             effective_agent_id = validate_agent_id(agent_id)
@@ -95,9 +95,9 @@ class ThreadController:
             raise HTTPException(status_code=500, detail="Internal server error") from e
 
     async def get_thread_history(
-            self,
-            thread: Thread,
-            user: User,
+        self,
+        thread: Thread,
+        user: User,
     ) -> EventSourceResponse:
         try:
             agent_instance = await self._get_agent_instance(thread.agent_id)
@@ -116,10 +116,10 @@ class ThreadController:
             raise HTTPException(status_code=500, detail="Internal server error") from e
 
     async def feedback(
-            self,
-            thread: Thread,
-            request: FeedbackRequest,
-            user: User,
+        self,
+        thread: Thread,
+        request: FeedbackRequest,
+        user: User,
     ) -> dict[str, str]:
         return await self._agent_service.add_feedback(
             trace=request.trace_id, feedback=request.feedback, thread=thread, user=user

@@ -9,10 +9,10 @@ class ThreadService:
     def get_thread(self, thread_id: str) -> Thread:
         thread = self._repository.get_thread_by_id(thread_id)
         return thread
-    
+
     async def create_thread(self, thread: Thread) -> Thread:
         return await self._repository.create_thread(thread)
-    
+
     async def update_thread(self, thread: Thread) -> Thread:
         return await self._repository.update_thread(thread)
 

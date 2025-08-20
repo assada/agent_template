@@ -8,6 +8,7 @@ def register_agents() -> None:
         agent_class_path="app.agent.langgraph.demo.demo_agent.DemoAgent",
         config=AgentConfig(
             prompt_source="langfuse",
+            checkpoint_type="postgres",
             custom_params={
                 "max_iterations": 10,
                 "temperature": 0.7,

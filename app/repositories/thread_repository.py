@@ -16,8 +16,8 @@ class ThreadRepository:
         self.session_manager = session_manager
 
     def get_thread_by_id(
-            self,
-            thread_id: str = Path(..., description="Thread ID"),
+        self,
+        thread_id: str = Path(..., description="Thread ID"),
     ) -> Thread:
         try:
             if thread_id is None or not isinstance(thread_id, str):

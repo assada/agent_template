@@ -25,11 +25,11 @@ class AgentFactory:
     _registered_agents: dict[str, AgentRegistry] = {}
 
     def __init__(
-            self,
-            global_config: AppConfig,
-            langfuse_client: Langfuse,
-            checkpointer_resolver: CheckpointerResolver,
-            prompt_provider_resolver: PromptProviderResolver,
+        self,
+        global_config: AppConfig,
+        langfuse_client: Langfuse,
+        checkpointer_resolver: CheckpointerResolver,
+        prompt_provider_resolver: PromptProviderResolver,
     ):
         self.global_config = global_config
         self._langfuse_client = langfuse_client
@@ -38,7 +38,7 @@ class AgentFactory:
 
     @classmethod
     def register_agent(
-            cls, agent_id: str, agent_class_path: str, config: AgentConfig
+        cls, agent_id: str, agent_class_path: str, config: AgentConfig
     ) -> None:
         cls._registered_agents[agent_id] = AgentRegistry(agent_class_path, config)
         logger.info(
@@ -74,8 +74,8 @@ class AgentFactory:
             ) from e
 
     async def create_agent(
-            self,
-            agent_id: str,
+        self,
+        agent_id: str,
     ) -> AgentInstance:
         if agent_id not in self._registered_agents:
             raise ValueError(
@@ -85,7 +85,9 @@ class AgentFactory:
         registry_entry = self._registered_agents[agent_id]
         agent_config = registry_entry.config
 
-        checkpointer = await self._checkpointer_resolver.get_saver(agent_config.checkpoint_type)
+        checkpointer = await self._checkpointer_resolver.get_saver(
+            agent_config.checkpoint_type
+        )
 
         prompt_provider = self._prompt_provider_resolver.resolve(
             agent_config.prompt_source,

@@ -108,4 +108,3 @@ class JsonFilePromptProvider(PromptProvider):
             config=config,
             metadata={"file_path": str(path), "label": label},
         )
- 

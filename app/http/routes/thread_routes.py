@@ -22,10 +22,10 @@ thread_router = APIRouter(tags=["threads"])
 )
 @inject
 def list_threads(  ## TODO: POST method to search threads
-        thread_service: Annotated[
-            ThreadService, Depends(Provide[Container.thread_service])
-        ],
-        user: User = Depends(get_current_user),  # noqa: B008
+    thread_service: Annotated[
+        ThreadService, Depends(Provide[Container.thread_service])
+    ],
+    user: User = Depends(get_current_user),  # noqa: B008
 ) -> list[dict[str, str | Any]]:
     threads = thread_service.list_threads(user.id)
     return [t.model_dump() for t in threads]
@@ -37,11 +37,11 @@ def list_threads(  ## TODO: POST method to search threads
 )
 @inject
 def get_thread(
-        thread_id: str,
-        thread_service: Annotated[
-            ThreadService, Depends(Provide[Container.thread_service])
-        ],
-        user: User = Depends(get_current_user),  # noqa: B008
+    thread_id: str,
+    thread_service: Annotated[
+        ThreadService, Depends(Provide[Container.thread_service])
+    ],
+    user: User = Depends(get_current_user),  # noqa: B008
 ) -> dict[str, str | Any]:
     thread = thread_service.get_thread(thread_id)
     if thread.user_id != user.id:
@@ -59,11 +59,11 @@ def get_thread(
 )
 @inject
 def delete_thread(
-        thread_id: str,
-        thread_service: Annotated[
-            ThreadService, Depends(Provide[Container.thread_service])
-        ],
-        user: User = Depends(get_current_user),  # noqa: B008
+    thread_id: str,
+    thread_service: Annotated[
+        ThreadService, Depends(Provide[Container.thread_service])
+    ],
+    user: User = Depends(get_current_user),  # noqa: B008
 ) -> ErrorResponse | None:
     thread = thread_service.get_thread(thread_id)
     if thread.user_id != user.id:
@@ -80,14 +80,14 @@ def delete_thread(
 )
 @inject
 async def get_thread_history(
-        thread_id: str,
-        thread_service: Annotated[
-            ThreadService, Depends(Provide[Container.thread_service])
-        ],
-        thread_controller: Annotated[
-            ThreadController, Depends(Provide[Container.thread_controller])
-        ],
-        user: User = Depends(get_current_user),  # noqa: B008
+    thread_id: str,
+    thread_service: Annotated[
+        ThreadService, Depends(Provide[Container.thread_service])
+    ],
+    thread_controller: Annotated[
+        ThreadController, Depends(Provide[Container.thread_controller])
+    ],
+    user: User = Depends(get_current_user),  # noqa: B008
 ) -> EventSourceResponse:
     thread = thread_service.get_thread(thread_id)
     if thread.user_id != user.id:
@@ -100,15 +100,15 @@ async def get_thread_history(
 @thread_router.post("/threads/{thread_id}/feedback")
 @inject
 async def post_thread_feedback(
-        thread_id: str,
-        thread_service: Annotated[
-            ThreadService, Depends(Provide[Container.thread_service])
-        ],
-        thread_controller: Annotated[
-            ThreadController, Depends(Provide[Container.thread_controller])
-        ],
-        request_body: FeedbackRequest,
-        user: User = Depends(get_current_user),  # noqa: B008
+    thread_id: str,
+    thread_service: Annotated[
+        ThreadService, Depends(Provide[Container.thread_service])
+    ],
+    thread_controller: Annotated[
+        ThreadController, Depends(Provide[Container.thread_controller])
+    ],
+    request_body: FeedbackRequest,
+    user: User = Depends(get_current_user),  # noqa: B008
 ) -> dict[str, str]:
     thread = thread_service.get_thread(thread_id)
     if thread.user_id != user.id:

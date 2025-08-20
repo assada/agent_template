@@ -13,6 +13,7 @@ class BaseState(BaseModel):
     messages: Annotated[Sequence[AnyMessage], add_messages] = Field(
         default_factory=list
     )
+    llm_context: list[AnyMessage] | None = Field(default=None, exclude=True)
     message_trace_map: list[dict[str, str | None]] = Field(default_factory=list)
 
 

@@ -30,5 +30,3 @@ class CheckpointerResolver:
         provider = self.resolve(checkpoint_type)
         await provider.initialize()
         return await provider.get_checkpointer()
-
-

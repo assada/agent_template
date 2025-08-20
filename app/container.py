@@ -15,8 +15,8 @@ from .infrastructure.database.session import SessionManager
 
 
 def create_checkpointer_resolver(
-        memory_checkpointer: MemoryCheckpointer,
-        postgres_checkpointer: PostgresCheckpointer,
+    memory_checkpointer: MemoryCheckpointer,
+    postgres_checkpointer: PostgresCheckpointer,
 ) -> CheckpointerResolver:
     return CheckpointerResolver(
         memory_checkpointer=memory_checkpointer,
@@ -41,10 +41,11 @@ class Container(containers.DeclarativeContainer):
 
     config = providers.Singleton(get_config)
 
-    db_connection: providers.Singleton[DatabaseConnection] = providers.Singleton(PostgreSQLConnection, config=config)
+    db_connection: providers.Singleton[DatabaseConnection] = providers.Singleton(
+        PostgreSQLConnection, config=config
+    )
     sqlmodel_manager: providers.Singleton[SessionManager] = providers.Singleton(
-        SQLModelManager,
-        db_connection=db_connection
+        SQLModelManager, db_connection=db_connection
     )
 
     user_repository: providers.Factory[Any] = providers.Factory(

@@ -13,7 +13,7 @@ class AgentService:
         self._langfuse_client = langfuse_client
 
     async def add_feedback(
-            self, trace: str, feedback: float, thread: Thread, user: User
+        self, trace: str, feedback: float, thread: Thread, user: User
     ) -> dict[str, str]:
         try:
             self._langfuse_client.create_score(

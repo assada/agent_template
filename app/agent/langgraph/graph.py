@@ -144,7 +144,11 @@ class Graph(ABC):
         response = cast(
             AIMessage,
             await chain.ainvoke(
-                {"history": state.messages},
+                {
+                    "history": state.llm_context
+                    if state.llm_context is not None
+                    else state.messages
+                },
                 config=config,
             ),
         )

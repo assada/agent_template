@@ -19,9 +19,7 @@ class PromptProviderResolver:
     ) -> None:
         self._config = config
         self._langfuse_client = langfuse_client
-        self._registry: dict[
-            str, Callable[[dict[str, Any]], PromptProvider]
-        ] = {
+        self._registry: dict[str, Callable[[dict[str, Any]], PromptProvider]] = {
             "file": self._build_file,
             "langfuse": self._build_langfuse,
         }
@@ -31,15 +29,11 @@ class PromptProviderResolver:
     ) -> None:
         self._registry[source.lower()] = factory
 
-    def resolve(
-        self, source: str, *, agent_name: str | None = None
-    ) -> PromptProvider:
+    def resolve(self, source: str, *, agent_name: str | None = None) -> PromptProvider:
         source_normalized = source.lower()
         factory = self._registry.get(source_normalized)
         if factory is None:
-            raise ValueError(
-                f"Unknown prompt source: {source_normalized}."
-            )
+            raise ValueError(f"Unknown prompt source: {source_normalized}.")
         return factory({"agent_name": agent_name})
 
     def _build_file(self, ctx: dict[str, Any]) -> PromptProvider:

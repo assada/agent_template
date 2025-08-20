@@ -27,11 +27,11 @@ logger = logging.getLogger(__name__)
 
 class LangGraphAgentInstance(AgentInstance):
     def __init__(
-            self,
-            agent_id: str,
-            graph: CompiledStateGraph[Any, Any, Any],
-            tracing_client: Langfuse,
-            config: AppConfig | None = None,
+        self,
+        agent_id: str,
+        graph: CompiledStateGraph[Any, Any, Any],
+        tracing_client: Langfuse,
+        config: AppConfig | None = None,
     ):
         super().__init__(agent_id, config or AppConfig())
         self.graph = graph
@@ -39,10 +39,10 @@ class LangGraphAgentInstance(AgentInstance):
         self.stream_processor = StreamProcessor()
 
     async def stream_response(  # type: ignore[override]
-            self, message: str, thread: Thread, user: User
+        self, message: str, thread: Thread, user: User
     ) -> AsyncGenerator[dict[str, Any]]:
         with self._tracing_client.start_as_current_span(
-                name=self.graph.name, input=message
+            name=self.graph.name, input=message
         ) as span:
             run_id = uuid4()
 
@@ -84,9 +84,9 @@ class LangGraphAgentInstance(AgentInstance):
                     inputs, stream_mode=["updates", "messages", "custom"], config=config
                 )
                 async for event in self.stream_processor.process_stream(
-                        stream,  # type: ignore[arg-type]
-                        run_id,
-                        span,
+                    stream,  # type: ignore[arg-type]
+                    run_id,
+                    span,
                 ):
                     thread.status = ThreadStatus.idle
                     yield event.model_dump()
@@ -97,7 +97,7 @@ class LangGraphAgentInstance(AgentInstance):
                 ).model_dump()
 
     async def load_history(  # type: ignore[override]
-            self, thread: Thread, user: User
+        self, thread: Thread, user: User
     ) -> AsyncGenerator[dict[str, Any]]:
         try:
             state_snapshot = await self.graph.aget_state(
